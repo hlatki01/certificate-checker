@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Certificate Checker</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
@@ -9,12 +10,12 @@
     <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
         <h1 class="text-2xl font-semibold mb-6">Payment Request</h1>
         <form id="paymentForm" class="space-y-4" enctype="multipart/form-data">
-            <input type="text" id="xLogin" placeholder="X-Login" class="w-full p-2 border rounded" />
-            <input type="text" id="xTransKey" placeholder="X-Trans-Key" class="w-full p-2 border rounded" />
-            <input type="text" id="country" placeholder="Country Code" class="w-full p-2 border rounded" />
-            <input type="text" id="secretKey" placeholder="Secret Key" class="w-full p-2 border rounded" />
-            <input type="file" id="privateKeyFile" name="privateKeyFile" class="w-full p-2 border rounded" accept=".pem" />
-            <input type="file" id="certificateFile" name="certificateFile" class="w-full p-2 border rounded" accept=".cer" />
+            <input type="text" id="xLogin" name="xLogin" placeholder="X-Login" required class="w-full p-2 border rounded" />
+            <input type="text" id="xTransKey" name="xTransKey" placeholder="X-Trans-Key" required class="w-full p-2 border rounded" />
+            <input type="text" id="country" name="country" placeholder="Country Code" required class="w-full p-2 border rounded" />
+            <input type="text" id="secretKey" name="secretKey" placeholder="Secret Key" required class="w-full p-2 border rounded" />
+            <input type="file" id="privateKeyFile" name="privateKeyFile" class="w-full p-2 border rounded" accept=".pem" required />
+            <input type="file" id="certificateFile" name="certificateFile" class="w-full p-2 border rounded" accept=".cer" required />
             <button type="button" onclick="sendPaymentRequest()" class="bg-blue-500 text-white px-4 py-2 rounded">Send Request</button>
         </form>
         <pre id="response" class="mt-6"></pre>
@@ -22,13 +23,27 @@
 
     <script>
         async function sendPaymentRequest() {
-            const formData = new FormData(document.getElementById('paymentForm'));
+            const form = document.getElementById('paymentForm');
+            const formData = new FormData();
+
+            // Manually append all fields to FormData
+            formData.append("xLogin", document.getElementById('xLogin').value);
+            formData.append("xTransKey", document.getElementById('xTransKey').value);
+            formData.append("country", document.getElementById('country').value);
+            formData.append("secretKey", document.getElementById('secretKey').value);
+            formData.append("privateKeyFile", document.getElementById('privateKeyFile').files[0]);
+            formData.append("certificateFile", document.getElementById('certificateFile').files[0]);
 
             try {
                 const response = await fetch('/proxy-request', {
                     method: 'POST',
                     body: formData
                 });
+
+                if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}`);
+                }
+
                 const data = await response.json();
                 document.getElementById('response').textContent = JSON.stringify(data, null, 2);
             } catch (error) {

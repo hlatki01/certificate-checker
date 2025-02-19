@@ -16,7 +16,7 @@ app.post('/proxy-request', async (req, res) => {
     const form = new formidable.IncomingForm({
         uploadDir: path.join(__dirname, 'certs'),
         keepExtensions: true,
-        multiples: true,
+        multiples: true
     });
 
     form.parse(req, async (err, fields, files) => {
@@ -28,11 +28,11 @@ app.post('/proxy-request', async (req, res) => {
         console.log("Received Fields:", fields); // Debugging log
         console.log("Received Files:", files);   // Debugging log
 
-        // Extract text fields properly
-        const xLogin = fields.xLogin && fields.xLogin.length > 0 ? fields.xLogin[0] : null;
-        const xTransKey = fields.xTransKey && fields.xTransKey.length > 0 ? fields.xTransKey[0] : null;
-        const country = fields.country && fields.country.length > 0 ? fields.country[0] : null;
-        const secretKey = fields.secretKey && fields.secretKey.length > 0 ? fields.secretKey[0] : null;
+        // Ensure text fields are correctly parsed
+        const xLogin = fields.xLogin ? fields.xLogin.toString() : null;
+        const xTransKey = fields.xTransKey ? fields.xTransKey.toString() : null;
+        const country = fields.country ? fields.country.toString() : null;
+        const secretKey = fields.secretKey ? fields.secretKey.toString() : null;
 
         if (!xLogin || !xTransKey || !country || !secretKey) {
             return res.status(400).json({ error: "Missing required fields in request body" });
