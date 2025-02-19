@@ -10,11 +10,11 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Serve static files from the frontend directory
+// Serve static files from the 'frontend' directory
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Fallback route to serve index.html for all unknown routes
-app.get('*', (req, res) => {
+// Fallback route to serve 'index.html' for all unknown routes
+app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
