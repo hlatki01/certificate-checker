@@ -7,25 +7,26 @@ const axios = require('axios');
 const cors = require('cors');
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // Ensure form fields are parsed
 app.use(cors());
 
 // Serve static files from the "public" folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Setup file upload using Multer
+// Middleware to handle form data and JSON
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Setup file upload using multer
 const upload = multer({ dest: 'certs/' });
 
 app.post('/proxy-request', upload.fields([
     { name: 'privateKeyFile', maxCount: 1 },
     { name: 'certificateFile', maxCount: 1 }
 ]), async (req, res) => {
-    console.log("Received Request Body:", req.body); // Debugging log
+    console.log("Received Request Body:", JSON.stringify(req.body, null, 2)); // Debugging log
 
-    // Extract text fields from request
     const { xLogin, xTransKey, country, secretKey } = req.body;
-    
+
     if (!secretKey) {
         return res.status(400).json({ error: "Missing secretKey in request body" });
     }
@@ -35,10 +36,10 @@ app.post('/proxy-request', upload.fields([
 
     const payload = { country };
     const concatenatedData = `${xLogin}${xDate}${JSON.stringify(payload)}`;
-    
+
     try {
         const hashBytes = require('crypto')
-            .createHmac('sha256', secretKey.trim()) // Trim to remove accidental spaces
+            .createHmac('sha256', secretKey.trim()) // Ensure key is trimmed
             .update(concatenatedData)
             .digest('hex');
 
