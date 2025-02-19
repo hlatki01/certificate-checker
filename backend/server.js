@@ -10,12 +10,12 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Serve static files from the 'frontend' directory
-app.use(express.static(path.join(__dirname, '../frontend')));
+// Serve static files from the "public" folder
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Fallback route to serve 'index.html' for all unknown routes
+// Serve "index.html" when accessing "/"
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Setup file upload using multer
