@@ -9,7 +9,14 @@ const cors = require('cors');
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// Serve static files from the frontend directory
 app.use(express.static(path.join(__dirname, '../frontend')));
+
+// Fallback route to serve index.html for all unknown routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
+});
 
 // Setup file upload using multer
 const upload = multer({ dest: 'certs/' });
@@ -49,7 +56,6 @@ app.post('/proxy-request', upload.fields([
     } catch (error) {
         res.status(500).json({ error: error.message });
     } finally {
-        // Clean up uploaded files
         fs.unlinkSync(req.files['privateKeyFile'][0].path);
         fs.unlinkSync(req.files['certificateFile'][0].path);
     }
