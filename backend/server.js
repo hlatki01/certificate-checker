@@ -25,39 +25,38 @@ app.post('/proxy-request', upload.fields([
     { name: 'privateKeyFile', maxCount: 1 },
     { name: 'certificateFile', maxCount: 1 }
 ]), async (req, res) => {
+    console.log("Received Request Body:", req.body); // Debugging log
+
     const { xLogin, xTransKey, country, secretKey } = req.body;
+    
+    if (!secretKey) {
+        return res.status(400).json({ error: "Missing secretKey in request body" });
+    }
+
     const xDate = new Date().toISOString();
     const apiURL = `https://sandbox-cert.dlocal.com/payments-methods?country=${country}`;
 
     const payload = { country };
     const concatenatedData = `${xLogin}${xDate}${JSON.stringify(payload)}`;
-    const hashBytes = require('crypto')
-        .createHmac('sha256', secretKey)
-        .update(concatenatedData)
-        .digest('hex');
-
-    const headers = {
-        'X-Date': xDate,
-        'X-Login': xLogin,
-        'X-Trans-Key': xTransKey,
-        'Authorization': `V2-HMAC-SHA256, Signature: ${hashBytes}`
-    };
-
+    
     try {
-        const httpsAgent = new https.Agent({
-            cert: fs.readFileSync(req.files['certificateFile'][0].path),
-            key: fs.readFileSync(req.files['privateKeyFile'][0].path),
-            rejectUnauthorized: false
-        });
+        const hashBytes = require('crypto')
+            .createHmac('sha256', secretKey) // This line was throwing an error
+            .update(concatenatedData)
+            .digest('hex');
 
-        const response = await axios.get(apiURL, { headers, httpsAgent });
+        const headers = {
+            'X-Date': xDate,
+            'X-Login': xLogin,
+            'X-Trans-Key': xTransKey,
+            'Authorization': `V2-HMAC-SHA256, Signature: ${hashBytes}`
+        };
 
-        res.json(response.data);
+        res.json({ message: "Signature generated successfully", headers });
+
     } catch (error) {
+        console.error("Error generating signature:", error);
         res.status(500).json({ error: error.message });
-    } finally {
-        fs.unlinkSync(req.files['privateKeyFile'][0].path);
-        fs.unlinkSync(req.files['certificateFile'][0].path);
     }
 });
 
