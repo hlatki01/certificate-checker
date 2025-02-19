@@ -15,7 +15,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.post('/proxy-request', async (req, res) => {
     const form = new formidable.IncomingForm({
         uploadDir: path.join(__dirname, 'certs'),
-        keepExtensions: true
+        keepExtensions: true,
+        multiples: true,  // Ensures all fields (files + text) are captured
     });
 
     form.parse(req, async (err, fields, files) => {
@@ -27,7 +28,11 @@ app.post('/proxy-request', async (req, res) => {
         console.log("Received Fields:", fields); // Debugging log
         console.log("Received Files:", files);   // Debugging log
 
-        const { xLogin, xTransKey, country, secretKey } = fields;
+        // Extract text fields correctly
+        const xLogin = fields.xLogin ? fields.xLogin[0] : null;
+        const xTransKey = fields.xTransKey ? fields.xTransKey[0] : null;
+        const country = fields.country ? fields.country[0] : null;
+        const secretKey = fields.secretKey ? fields.secretKey[0] : null;
 
         if (!secretKey) {
             return res.status(400).json({ error: "Missing secretKey in request body" });
