@@ -13,13 +13,11 @@ app.use(cors());
 // Serve static files from the "public" folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve "index.html" when accessing "/"
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 // Setup file upload using multer
 const upload = multer({ dest: 'certs/' });
+
+// Middleware to correctly parse form-data fields
+app.use(express.urlencoded({ extended: true }));
 
 app.post('/proxy-request', upload.fields([
     { name: 'privateKeyFile', maxCount: 1 },
@@ -41,7 +39,7 @@ app.post('/proxy-request', upload.fields([
     
     try {
         const hashBytes = require('crypto')
-            .createHmac('sha256', secretKey) // This line was throwing an error
+            .createHmac('sha256', secretKey.trim()) // Trim to remove accidental spaces
             .update(concatenatedData)
             .digest('hex');
 
