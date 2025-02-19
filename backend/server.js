@@ -1,10 +1,10 @@
 const express = require('express');
-const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const axios = require('axios');
 const cors = require('cors');
+const formidable = require('formidable');
 
 const app = express();
 app.use(cors());
@@ -12,26 +12,22 @@ app.use(cors());
 // Serve static files from the "public" folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Middleware to parse JSON and URL-encoded data
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.post('/proxy-request', async (req, res) => {
+    const form = new formidable.IncomingForm({
+        uploadDir: path.join(__dirname, 'certs'),
+        keepExtensions: true
+    });
 
-// Setup file upload using Multer
-const upload = multer({ dest: 'certs/' });
+    form.parse(req, async (err, fields, files) => {
+        if (err) {
+            console.error("Formidable parsing error:", err);
+            return res.status(500).json({ error: "Error processing form data" });
+        }
 
-app.post('/proxy-request', 
-    (req, res, next) => {
-        // Parse text fields separately
-        multer().none()(req, res, next);
-    }, 
-    upload.fields([
-        { name: 'privateKeyFile', maxCount: 1 },
-        { name: 'certificateFile', maxCount: 1 }
-    ]), 
-    async (req, res) => {
-        console.log("Received Request Body:", JSON.stringify(req.body, null, 2)); // Debugging log
+        console.log("Received Fields:", fields); // Debugging log
+        console.log("Received Files:", files);   // Debugging log
 
-        const { xLogin, xTransKey, country, secretKey } = req.body;
+        const { xLogin, xTransKey, country, secretKey } = fields;
 
         if (!secretKey) {
             return res.status(400).json({ error: "Missing secretKey in request body" });
@@ -45,7 +41,7 @@ app.post('/proxy-request',
 
         try {
             const hashBytes = require('crypto')
-                .createHmac('sha256', secretKey.trim()) // Ensure key is trimmed
+                .createHmac('sha256', secretKey.trim())
                 .update(concatenatedData)
                 .digest('hex');
 
@@ -62,6 +58,7 @@ app.post('/proxy-request',
             console.error("Error generating signature:", error);
             res.status(500).json({ error: error.message });
         }
+    });
 });
 
 const PORT = process.env.PORT || 5000;
