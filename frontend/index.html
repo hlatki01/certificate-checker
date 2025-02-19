@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Certificate Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-10">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
+        <h1 class="text-2xl font-semibold mb-6">Payment Request</h1>
+        <form id="paymentForm" class="space-y-4" enctype="multipart/form-data">
+            <input type="text" id="xLogin" placeholder="X-Login" class="w-full p-2 border rounded" />
+            <input type="text" id="xTransKey" placeholder="X-Trans-Key" class="w-full p-2 border rounded" />
+            <input type="text" id="country" placeholder="Country Code" class="w-full p-2 border rounded" />
+            <input type="text" id="secretKey" placeholder="Secret Key" class="w-full p-2 border rounded" />
+            <input type="file" id="privateKeyFile" name="privateKeyFile" class="w-full p-2 border rounded" accept=".pem" />
+            <input type="file" id="certificateFile" name="certificateFile" class="w-full p-2 border rounded" accept=".cer" />
+            <button type="button" onclick="sendPaymentRequest()" class="bg-blue-500 text-white px-4 py-2 rounded">Send Request</button>
+        </form>
+        <pre id="response" class="mt-6"></pre>
+    </div>
+
+    <script>
+        async function sendPaymentRequest() {
+            const formData = new FormData(document.getElementById('paymentForm'));
+
+            try {
+                const response = await fetch('/proxy-request', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                document.getElementById('response').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('response').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
