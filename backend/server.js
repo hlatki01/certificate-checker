@@ -30,10 +30,6 @@ app.post('/proxy-request', async (req, res) => {
             console.error("Formidable parsing error:", err);
             return res.status(500).json({ error: "Error processing form data" });
         }
-
-        console.log("Received Fields:", fields);
-        console.log("Received Files:", files);
-
         // Extract text fields
         const xLogin = fields.xLogin ? fields.xLogin.toString() : null;
         const xTransKey = fields.xTransKey ? fields.xTransKey.toString() : null;
